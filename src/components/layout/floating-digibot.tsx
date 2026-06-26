@@ -24,8 +24,63 @@ export function FloatingDigiBot() {
   const [isListening, setIsListening] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [language, setLanguage] = useState<"en" | "hi" | "or">("en")
+  const [voice, setVoice] = useState<"shreya" | "shubh">("shreya")
+  const [isPlaying, setIsPlaying] = useState(false)
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
+
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)
+  const micSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+
+  // Start analyzing user mic
+  const startMicAnalysis = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      micStreamRef.current = stream
+
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      const audioContext = audioContextRef.current
+      if (audioContext.state === "suspended") {
+        await audioContext.resume()
+      }
+
+      if (!analyserRef.current) {
+        const analyser = audioContext.createAnalyser()
+        analyser.fftSize = 256
+        analyserRef.current = analyser
+      }
+      const analyser = analyserRef.current
+
+      const micSource = audioContext.createMediaStreamSource(stream)
+      micSource.connect(analyser)
+      micSourceRef.current = micSource
+    } catch (err) {
+      console.error("Failed to get user microphone for visualization:", err)
+    }
+  }
+
+  const stopMicAnalysis = () => {
+    if (micSourceRef.current) {
+      try {
+        micSourceRef.current.disconnect()
+      } catch (e) {}
+      micSourceRef.current = null
+    }
+    if (micStreamRef.current) {
+      try {
+        micStreamRef.current.getTracks().forEach(track => track.stop())
+      } catch (e) {}
+      micStreamRef.current = null
+    }
+  }
 
   // Configure Speech Recognition based on selected language
   useEffect(() => {
@@ -42,15 +97,18 @@ export function FloatingDigiBot() {
 
       rec.onstart = () => {
         setIsListening(true)
+        startMicAnalysis()
       }
 
       rec.onend = () => {
         setIsListening(false)
+        stopMicAnalysis()
       }
 
       rec.onerror = (e: any) => {
         console.error("Speech recognition error:", e.error)
         setIsListening(false)
+        stopMicAnalysis()
       }
 
       rec.onresult = (event: any) => {
@@ -80,6 +138,17 @@ export function FloatingDigiBot() {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel()
       }
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.stop()
+        } catch (e) {}
+        sourceNodeRef.current = null
+      }
+      stopMicAnalysis()
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
     }
   }, [isOpen])
 
@@ -97,37 +166,235 @@ export function FloatingDigiBot() {
     }])
   }, [activeMember])
 
-  const speakText = (text: string) => {
+  // Real-time Canvas drawing logic for ECG / Audio Visualizer
+  useEffect(() => {
+    if (!isOpen) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+      return
+    }
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    let sweepX = 0
+    const width = canvas.width
+    const height = canvas.height
+    const midY = height / 2
+
+    // Fill background initially
+    ctx.fillStyle = "#020617"
+    ctx.fillRect(0, 0, width, height)
+
+    const bufferLength = analyserRef.current ? analyserRef.current.frequencyBinCount : 128
+    const dataArray = new Uint8Array(bufferLength)
+
+    const render = () => {
+      ctx.fillStyle = "rgba(2, 6, 23, 0.15)"
+      ctx.fillRect(0, 0, width, height)
+
+      const isUserSpeaking = isListening
+      const isBotSpeaking = isPlaying
+      const isBotThinking = loading || contextLoading
+
+      if (isUserSpeaking && analyserRef.current) {
+        analyserRef.current.getByteTimeDomainData(dataArray)
+
+        ctx.lineWidth = 2.5
+        ctx.strokeStyle = "#06b6d4"
+        ctx.shadowBlur = 8
+        ctx.shadowColor = "#06b6d4"
+        ctx.beginPath()
+
+        const sliceWidth = width / bufferLength
+        let x = 0
+
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0
+          const y = v * midY
+
+          if (i === 0) {
+            ctx.moveTo(x, y)
+          } else {
+            ctx.lineTo(x, y)
+          }
+
+          x += sliceWidth
+        }
+        ctx.stroke()
+        ctx.shadowBlur = 0
+
+      } else if (isBotSpeaking && analyserRef.current) {
+        analyserRef.current.getByteFrequencyData(dataArray)
+
+        ctx.shadowBlur = 10
+        ctx.shadowColor = "#a855f7"
+
+        ctx.lineWidth = 2
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.8)"
+        ctx.beginPath()
+        const barWidth = width / (bufferLength / 2)
+        let x = 0
+        for (let i = 0; i < bufferLength / 2; i++) {
+          const barHeight = (dataArray[i] / 255) * midY * 0.9
+          const yOffset = barHeight * Math.sin((i / 10) + Date.now() / 150)
+          if (i === 0) {
+            ctx.moveTo(x, midY + yOffset)
+          } else {
+            ctx.lineTo(x, midY + yOffset)
+          }
+          x += barWidth
+        }
+        ctx.stroke()
+
+        ctx.strokeStyle = "rgba(168, 85, 247, 0.8)"
+        ctx.beginPath()
+        x = 0
+        for (let i = 0; i < bufferLength / 2; i++) {
+          const barHeight = (dataArray[i] / 255) * midY * 0.9
+          const yOffset = -barHeight * Math.cos((i / 10) + Date.now() / 200)
+          if (i === 0) {
+            ctx.moveTo(x, midY + yOffset)
+          } else {
+            ctx.lineTo(x, midY + yOffset)
+          }
+          x += barWidth
+        }
+        ctx.stroke()
+        ctx.shadowBlur = 0
+
+      } else if (isBotThinking) {
+        sweepX = (sweepX + 4) % width
+        const speed = 4
+        
+        ctx.lineWidth = 3
+        ctx.strokeStyle = "#a855f7"
+        ctx.shadowBlur = 8
+        ctx.shadowColor = "#a855f7"
+        ctx.beginPath()
+
+        const prevX = (sweepX - speed + width) % width
+        const prevY = getECGPointY(prevX, height, 40, 2.5)
+        const currentY = getECGPointY(sweepX, height, 40, 2.5)
+
+        if (sweepX > prevX) {
+          ctx.moveTo(prevX, prevY)
+          ctx.lineTo(sweepX, currentY)
+          ctx.stroke()
+        } else {
+          ctx.moveTo(0, currentY)
+          ctx.lineTo(sweepX, currentY)
+          ctx.stroke()
+        }
+        ctx.shadowBlur = 0
+
+      } else {
+        sweepX = (sweepX + 2.5) % width
+        const speed = 2.5
+
+        ctx.lineWidth = 2
+        ctx.strokeStyle = "#10b981"
+        ctx.shadowBlur = 6
+        ctx.shadowColor = "#10b981"
+        ctx.beginPath()
+
+        const prevX = (sweepX - speed + width) % width
+        const prevY = getECGPointY(prevX, height, 120, 1.0)
+        const currentY = getECGPointY(sweepX, height, 120, 1.0)
+
+        if (sweepX > prevX) {
+          ctx.moveTo(prevX, prevY)
+          ctx.lineTo(sweepX, currentY)
+          ctx.stroke()
+        } else {
+          ctx.moveTo(0, currentY)
+          ctx.lineTo(sweepX, currentY)
+          ctx.stroke()
+        }
+        ctx.shadowBlur = 0
+      }
+
+      animationFrameRef.current = requestAnimationFrame(render)
+    }
+
+    render()
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [isOpen, isListening, isPlaying, loading, contextLoading])
+
+  const playAudioFromBase64 = async (base64String: string) => {
+    const binaryString = atob(base64String)
+    const len = binaryString.length
+    const bytes = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+    const arrayBuffer = bytes.buffer
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
+    const audioContext = audioContextRef.current
+    if (audioContext.state === "suspended") {
+      await audioContext.resume()
+    }
+
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+
+    const sourceNode = audioContext.createBufferSource()
+    sourceNode.buffer = audioBuffer
+
+    if (!analyserRef.current) {
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 256
+      analyserRef.current = analyser
+    }
+    const analyser = analyserRef.current
+
+    sourceNode.connect(analyser)
+    analyser.connect(audioContext.destination)
+
+    sourceNodeRef.current = sourceNode
+    setIsPlaying(true)
+
+    sourceNode.onended = () => {
+      setIsPlaying(false)
+      sourceNodeRef.current = null
+    }
+
+    sourceNode.start(0)
+  }
+
+  const speakBrowserTTS = (cleanText: string) => {
     if (isMuted || !('speechSynthesis' in window)) return
-
-    window.speechSynthesis.cancel()
-
-    // Clean up text
-    const cleanText = text
-      .replace(/[*#_`~]/g, '')
-      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
-      .replace(/₹/g, 'Rupees ')
 
     const utterance = new SpeechSynthesisUtterance(cleanText)
     const voices = window.speechSynthesis.getVoices()
 
     let targetVoice = null
 
-    // Determine voice filter based on selected language
     if (language === "hi") {
       targetVoice = voices.find(v => v.lang.toLowerCase().startsWith("hi")) ||
                     voices.find(v => v.lang.toLowerCase().replace('_', '-').startsWith("hi-in"))
     } else if (language === "or") {
-      // Browsers lack native Odia voice synthesis; fallback to Hindi or English
       targetVoice = voices.find(v => v.lang.toLowerCase().startsWith("or")) ||
                     voices.find(v => v.lang.toLowerCase().startsWith("hi")) ||
                     voices.find(v => v.lang.toLowerCase().replace('_', '-').startsWith("en-in"))
     } else {
-      // English (Indian accent female)
       targetVoice = voices.find(v => {
         const name = v.name.toLowerCase()
         const lang = v.lang.toLowerCase().replace('_', '-')
-        return lang === 'en-in' && (name.includes('female') || name.includes('india') || name.includes('google') || name.includes('veena') || name.includes('heera'))
+        const genderMatch = voice === "shreya" ? (name.includes('female') || name.includes('veena') || name.includes('heera') || name.includes('zira')) : (name.includes('male') || name.includes('ravi') || name.includes('google'));
+        return lang === 'en-in' && genderMatch;
       }) || voices.find(v => v.lang.toLowerCase().replace('_', '-') === 'en-in')
     }
 
@@ -138,7 +405,74 @@ export function FloatingDigiBot() {
     utterance.rate = 0.95
     utterance.pitch = 1.05
 
+    utterance.onstart = () => setIsPlaying(true)
+    utterance.onend = () => setIsPlaying(false)
+    utterance.onerror = () => setIsPlaying(false)
+
     window.speechSynthesis.speak(utterance)
+  }
+
+  const speakText = async (text: string) => {
+    if (isMuted) return
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+    }
+    if (sourceNodeRef.current) {
+      try {
+        sourceNodeRef.current.stop()
+      } catch (e) {}
+      sourceNodeRef.current = null
+    }
+    setIsPlaying(false)
+
+    const cleanText = text
+      .replace(/[*#_`~]/g, '')
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+      .replace(/₹/g, 'Rupees ')
+
+    const sarvamEncodedKey = (import.meta as any).env?.VITE_SARVAM_API_KEY
+    if (!sarvamEncodedKey) {
+      console.warn("Sarvam AI API Key not found, falling back to browser SpeechSynthesis")
+      speakBrowserTTS(cleanText)
+      return
+    }
+
+    let targetLangCode = "en-IN"
+    if (language === "hi") targetLangCode = "hi-IN"
+    else if (language === "or") targetLangCode = "or-IN"
+
+    try {
+      const apiKey = atob(sarvamEncodedKey)
+      const response = await fetch("https://api.sarvam.ai/text-to-speech", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-subscription-key": apiKey
+        },
+        body: JSON.stringify({
+          text: cleanText,
+          target_language_code: targetLangCode,
+          speaker: voice,
+          model: "bulbul:v3"
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Sarvam API returned error: ${response.status}`)
+      }
+
+      const resData = await response.json()
+      const base64Audio = resData.audio_content
+      if (!base64Audio) {
+        throw new Error("No audio_content returned from Sarvam API")
+      }
+
+      await playAudioFromBase64(base64Audio)
+    } catch (error) {
+      console.error("Sarvam TTS error, falling back to browser SpeechSynthesis:", error)
+      speakBrowserTTS(cleanText)
+    }
   }
 
   const toggleListening = () => {
@@ -153,6 +487,13 @@ export function FloatingDigiBot() {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel()
       }
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.stop()
+        } catch (e) {}
+        sourceNodeRef.current = null
+      }
+      setIsPlaying(false)
       recognitionRef.current.start()
     }
   }
@@ -314,16 +655,26 @@ ${context}`
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {/* Language Selector */}
               <select 
                 value={language} 
                 onChange={(e) => setLanguage(e.target.value as any)}
-                className="bg-slate-100 dark:bg-slate-800 text-[10px] rounded-md px-1 py-0.5 border border-slate-200 dark:border-slate-700 outline-none"
+                className="bg-slate-100 dark:bg-slate-800 text-[10px] rounded-md px-1 py-0.5 border border-slate-200 dark:border-slate-700 outline-none text-foreground"
               >
                 <option value="en">English</option>
-                <option value="hi">हिंदी (Hindi)</option>
-                <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                <option value="hi">हिंदी</option>
+                <option value="or">ଓଡ଼ିଆ</option>
+              </select>
+
+              {/* Voice Selector */}
+              <select 
+                value={voice} 
+                onChange={(e) => setVoice(e.target.value as any)}
+                className="bg-slate-100 dark:bg-slate-800 text-[10px] rounded-md px-1 py-0.5 border border-slate-200 dark:border-slate-700 outline-none text-foreground"
+              >
+                <option value="shreya">Female (Shreya)</option>
+                <option value="shubh">Male (Shubh)</option>
               </select>
 
               {/* Mute toggle */}
@@ -332,9 +683,19 @@ ${context}`
                 size="icon" 
                 className="size-6 text-muted-foreground hover:text-cyan-500 hover:bg-cyan-500/10"
                 onClick={() => {
-                  setIsMuted(prev => !prev)
-                  if (!isMuted && 'speechSynthesis' in window) {
-                    window.speechSynthesis.cancel()
+                  const newMuted = !isMuted
+                  setIsMuted(newMuted)
+                  if (newMuted) {
+                    if ('speechSynthesis' in window) {
+                      window.speechSynthesis.cancel()
+                    }
+                    if (sourceNodeRef.current) {
+                      try {
+                        sourceNodeRef.current.stop()
+                      } catch (e) {}
+                      sourceNodeRef.current = null
+                    }
+                    setIsPlaying(false)
                   }
                 }}
               >
@@ -382,16 +743,15 @@ ${context}`
             <div ref={bottomRef} />
           </div>
 
-          {/* ECG waveform bar (shown when talking or loading/thinking) */}
-          {(loading || (!isMuted && 'speechSynthesis' in window && window.speechSynthesis.speaking)) && (
-            <div className="relative h-6 bg-black/10 border-t border-cyan-500/20 overflow-hidden">
-              <svg className="absolute inset-0 w-full h-full text-cyan-500" viewBox="0 0 200 100" preserveAspectRatio="none">
-                <path d="M 0,50 L 40,50 L 50,15 L 55,85 L 60,40 L 65,60 L 75,50 L 115,50 L 125,15 L 130,85 L 135,40 L 140,60 L 150,50 L 200,50" 
-                      fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-slate-950 to-white dark:to-slate-950 w-[200%] ecg-sweep-animation"></div>
-            </div>
-          )}
+          {/* Real-time Canvas ECG / Audio Waveform Visualizer */}
+          <div className="relative h-12 bg-slate-950/90 border-t border-cyan-500/20 overflow-hidden flex items-center justify-center">
+            <canvas 
+              ref={canvasRef} 
+              width={384} 
+              height={48} 
+              className="w-full h-full"
+            />
+          </div>
 
           <Separator />
 
@@ -458,3 +818,44 @@ ${context}`
   )
 }
 export default FloatingDigiBot
+
+// Helper function to calculate Y offset for drawing ECG wave sweeps
+const getECGPointY = (x: number, height: number, cycleLength: number, intensity: number): number => {
+  const midY = height / 2
+  const localX = x % cycleLength
+
+  let yOffset = 0
+
+  // Design of single ECG heartbeat cycle wave profile
+  const p1 = cycleLength * 0.35 // Start of P wave
+  const p2 = cycleLength * 0.42 // End of P wave
+  const q1 = cycleLength * 0.45 // Start of Q wave
+  const q2 = cycleLength * 0.47 // End of Q wave / start of R wave
+  const r1 = cycleLength * 0.50 // Peak of R wave / start of S wave
+  const s1 = cycleLength * 0.53 // Trough of S wave / start of T wave
+  const t1 = cycleLength * 0.60 // Start of T wave
+  const t2 = cycleLength * 0.70 // End of T wave
+
+  if (localX >= p1 && localX < p2) {
+    const progress = (localX - p1) / (p2 - p1)
+    yOffset = Math.sin(progress * Math.PI) * 4 * intensity
+  } else if (localX >= q1 && localX < q2) {
+    const progress = (localX - q1) / (q2 - q1)
+    yOffset = -progress * 3 * intensity
+  } else if (localX >= q2 && localX < r1) {
+    const progress = (localX - q2) / (r1 - q2)
+    yOffset = (-3 + progress * 25) * intensity
+  } else if (localX >= r1 && localX < s1) {
+    const progress = (localX - r1) / (s1 - r1)
+    yOffset = (22 - progress * 30) * intensity
+  } else if (localX >= s1 && localX < t1) {
+    const progress = (localX - s1) / (t1 - s1)
+    yOffset = (-8 + progress * 8) * intensity
+  } else if (localX >= t1 && localX < t2) {
+    const progress = (localX - t1) / (t2 - t1)
+    yOffset = Math.sin(progress * Math.PI) * 6 * intensity
+  }
+
+  return midY - yOffset
+}
+
