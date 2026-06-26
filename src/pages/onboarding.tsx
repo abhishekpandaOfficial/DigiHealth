@@ -3,7 +3,8 @@ import { useApp } from "@/contexts/app-context"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Heart, Users, Stethoscope, ArrowRight, Loader2 } from "lucide-react"
+import { Heart, Users, Stethoscope, ArrowRight, Loader2, Lock } from "lucide-react"
+import { toast } from "sonner"
 
 export function OnboardingPage() {
   const { onboardUser, user } = useApp()
@@ -18,6 +19,7 @@ export function OnboardingPage() {
   const [hospitalName, setHospitalName] = useState("")
   
   const [submitting, setSubmitting] = useState(false)
+  const [showCredsCard, setShowCredsCard] = useState(false)
 
   const handleNext = () => {
     if (step === 1 && !role) return
@@ -31,15 +33,7 @@ export function OnboardingPage() {
   }
 
   const handleSubmit = () => {
-    setSubmitting(true)
-    setTimeout(() => {
-      onboardUser(role!, name, {
-        specialization: role === "doctor" ? specialization : undefined,
-        licenseId: role === "doctor" ? licenseId : undefined,
-        hospitalName: role === "doctor" ? hospitalName : undefined
-      })
-      setSubmitting(false)
-    }, 1500)
+    setShowCredsCard(true)
   }
 
   return (
@@ -62,6 +56,106 @@ export function OnboardingPage() {
             <Loader2 className="size-10 text-cyan-500 animate-spin" />
             <h3 className="text-xl font-bold">Creating your profile</h3>
             <p className="text-sm text-slate-400 font-mono">Syncing credentials to Chronyx secure database...</p>
+          </div>
+        ) : showCredsCard ? (
+          <div className="space-y-6 text-center animate-[fadeIn_0.3s_ease-out]">
+            <div className="size-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
+              <Lock className="size-8 text-emerald-400" />
+            </div>
+            
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-white">Your Chronyx Credentials</h2>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                Save or print these credentials securely. They are linked to your secure isolated SaaS workspace.
+              </p>
+            </div>
+
+            <div className={`p-6 rounded-2xl border bg-slate-950/60 backdrop-blur-md relative overflow-hidden text-left shadow-2xl ${role === "doctor" ? "border-purple-500/30 shadow-purple-500/5" : "border-cyan-500/30 shadow-cyan-500/5"}`}>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-bl-full pointer-events-none"></div>
+              
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block">CHRONYX HEALTH SYSTEM</span>
+                  <span className="text-xs text-slate-300 block font-mono">Abhishek Panda / OriginX Labs</span>
+                </div>
+                <div className="size-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-white">
+                  CX
+                </div>
+              </div>
+
+              <div className="space-y-4 font-mono text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Workspace Role</span>
+                  <span className={`font-bold uppercase tracking-wider block mt-0.5 ${role === "doctor" ? "text-purple-400" : "text-cyan-400"}`}>
+                    {role === "doctor" ? "🩺 Medical Doctor" : "👥 Individual / Family"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Unique Access ID</span>
+                  <span className="text-lg font-bold text-white tracking-widest block mt-0.5">{user?.uniqueId}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Full Name</span>
+                    <span className="font-semibold text-slate-200 block mt-0.5 truncate">{name}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Phone Number</span>
+                    <span className="font-semibold text-slate-200 block mt-0.5">{phone}</span>
+                  </div>
+                </div>
+
+                {role === "doctor" && (
+                  <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-3">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Specialization</span>
+                      <span className="font-semibold text-slate-200 block mt-0.5 truncate">{specialization}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">License ID</span>
+                      <span className="font-semibold text-slate-200 block mt-0.5 truncate">{licenseId}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 border-t border-white/5 pt-3 flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                <span>VERIFIED ACCREDITATION</span>
+                <span className="text-emerald-400 font-bold">● ACTIVE</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 mt-6">
+              <Button 
+                onClick={() => {
+                  navigator.clipboard.writeText(user?.uniqueId || "");
+                  toast.success("Unique Access ID copied to clipboard!");
+                }}
+                variant="outline"
+                className="w-full border-white/10 hover:bg-white/5 h-10 text-xs font-semibold"
+              >
+                Copy Unique ID
+              </Button>
+              <Button 
+                onClick={() => {
+                  setSubmitting(true);
+                  setTimeout(() => {
+                    onboardUser(role!, name, {
+                      phone,
+                      specialization: role === "doctor" ? specialization : undefined,
+                      licenseId: role === "doctor" ? licenseId : undefined,
+                      hospitalName: role === "doctor" ? hospitalName : undefined
+                    });
+                    setSubmitting(false);
+                  }, 1500);
+                }}
+                className={`w-full h-11 text-white font-semibold text-sm ${role === "doctor" ? "bg-purple-600 hover:bg-purple-500" : "bg-cyan-600 hover:bg-cyan-500"}`}
+              >
+                Enter Secure Workspace
+              </Button>
+            </div>
           </div>
         ) : (
           <div>

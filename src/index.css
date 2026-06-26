@@ -42,35 +42,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
-  ============================================================
-  THEME CONFIGURATION
-  ============================================================
-
-  Theme: neutral (default)
-  Mode:  light (:root) / dark (.dark)
-
-  To switch to dark mode by default, change the ThemeProvider
-  defaultTheme prop in src/main.tsx:
-    <ThemeProvider defaultTheme="dark">
-
-  To change theme colors, replace the OKLCH values below.
-  Visit https://ui.shadcn.com/themes to generate theme CSS.
-
-  To change the base color palette (e.g. stone, zinc, gray),
-  re-initialize with the shadcn CLI:
-    npx shadcn@latest init -t vite --preset nova -y -f
-    npx shadcn@latest init -t vite --preset vega -y -f
-
-  Available presets: nova, vega, maia, lyra, mira
-  Available base colors: neutral, stone, zinc, gray, mauve,
-                         olive, mist, taupe
-
-  CLI non-interactive theme change:
-    npx shadcn@latest init -t vite -d -y -f
-  ============================================================
-*/
-
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -152,40 +123,85 @@
 }
 
 /* ============================================================
-   DIGIHEALTH CUSTOM ANIMATIONS (ECG & JARVIS ORB)
+   DIGIHEALTH PREMIUM ANIMATIONS
    ============================================================ */
 
+/* ECG / Waveform sweep */
 @keyframes ecg-sweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
-
 .ecg-sweep-animation {
   animation: ecg-sweep 2s linear infinite;
 }
 
+/* Floating animation */
+@keyframes dh-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+.dh-float { animation: dh-float 4s ease-in-out infinite; }
+.dh-float-delay { animation: dh-float 5s ease-in-out infinite 1s; }
+.dh-float-delay2 { animation: dh-float 3.5s ease-in-out infinite 0.5s; }
+
+/* Loader pulse ring */
+@keyframes dh-ping {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+.dh-ping { animation: dh-ping 2s ease-out infinite; }
+
+/* Aurora gradient background */
+@keyframes aurora {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.aurora-bg {
+  background: linear-gradient(270deg, #030712, #0f172a, #1e1b4b, #0c4a6e, #030712);
+  background-size: 400% 400%;
+  animation: aurora 12s ease infinite;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.gradient-text-animated {
+  background: linear-gradient(135deg, #06b6d4, #8b5cf6, #06b6d4);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* Glow pulse */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+  50% { box-shadow: 0 0 50px rgba(6, 182, 212, 0.8), 0 0 100px rgba(139, 92, 246, 0.4); }
+}
+.glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+
+/* Jarvis rings */
 @keyframes jarvis-spin-cw {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
-
 @keyframes jarvis-spin-ccw {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(-360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
 }
-
 @keyframes jarvis-pulse {
   0%, 100% {
     transform: scale(1);
@@ -196,20 +212,93 @@
     box-shadow: 0 0 30px rgba(6, 182, 212, 0.8), inset 0 0 20px rgba(6, 182, 212, 0.6);
   }
 }
+.jarvis-outer-ring { animation: jarvis-spin-cw 8s linear infinite; }
+.jarvis-middle-ring { animation: jarvis-spin-ccw 6s linear infinite; }
+.jarvis-inner-orb { animation: jarvis-pulse 2s ease-in-out infinite; }
+.jarvis-inner-orb-active { animation: jarvis-pulse 0.8s ease-in-out infinite; }
 
-.jarvis-outer-ring {
-  animation: jarvis-spin-cw 8s linear infinite;
+/* Particle float */
+@keyframes particle-float {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+  25% { transform: translate(10px, -15px) scale(1.05); opacity: 1; }
+  75% { transform: translate(-10px, 10px) scale(0.95); opacity: 0.5; }
 }
 
-.jarvis-middle-ring {
-  animation: jarvis-spin-ccw 6s linear infinite;
+/* Equalizer bars */
+@keyframes equalizer {
+  from { transform: scaleY(0.3); }
+  to { transform: scaleY(1); }
 }
 
-.jarvis-inner-orb {
-  animation: jarvis-pulse 2s ease-in-out infinite;
+/* Text reveal clip */
+@keyframes text-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0% 0 0); }
+}
+.text-reveal { animation: text-reveal 1s cubic-bezier(0.77, 0, 0.175, 1) forwards; }
+
+/* Slide up */
+@keyframes slide-up {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.slide-up { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Scale in */
+@keyframes scale-in {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.scale-in { animation: scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* ============================================================
+   CLINICAL PRESCRIPTION PRINT SYSTEM
+   ============================================================ */
+
+@media print {
+  body * { visibility: hidden !important; }
+  #printable-prescription, #printable-prescription * { visibility: visible !important; }
+  #printable-prescription {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
-.jarvis-inner-orb-active {
-  animation: jarvis-pulse 0.8s ease-in-out infinite;
+/* Glassmorphic contrast improvements */
+.text-readable-contrast {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar on landing */
+.landing-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Premium focus rings */
+:focus-visible {
+  outline: 2px solid rgba(6, 182, 212, 0.6);
+  outline-offset: 2px;
+}
+
+/* Cursor reset on landing */
+.landing-page * {
+  cursor: none;
+}

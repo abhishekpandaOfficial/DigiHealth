@@ -27,7 +27,7 @@ export function DoctorLayout({ children }: { children: React.ReactNode }) {
               <Heart className="size-4 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-sm tracking-wider leading-none">CHRONYX</span>
+              <span className="font-bold text-sm tracking-wider leading-none">DIGIHEALTH</span>
               <span className="text-[9px] text-cyan-600 dark:text-cyan-400 block font-mono mt-0.5">CLINICAL SUITE</span>
             </div>
           </div>
@@ -50,7 +50,7 @@ export function DoctorLayout({ children }: { children: React.ReactNode }) {
               className={({ isActive }) => `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
             >
               <Sparkles className="size-4" />
-              Chronyx AI Console
+              DigiHealth AI Console
             </NavLink>
           </nav>
         </div>
@@ -96,7 +96,7 @@ export function DoctorLayout({ children }: { children: React.ReactNode }) {
             <div className="size-7 rounded bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center">
               <Heart className="size-3.5 text-white animate-pulse" />
             </div>
-            <span className="font-bold text-sm tracking-widest text-foreground">CHRONYX CLINIC</span>
+            <span className="font-bold text-sm tracking-widest text-foreground">DIGIHEALTH CLINIC</span>
           </div>
 
           <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground font-mono">

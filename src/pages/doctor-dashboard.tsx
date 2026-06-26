@@ -35,6 +35,20 @@ export function DoctorDashboard() {
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false)
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false)
   const [showVitalsModal, setShowVitalsModal] = useState(false)
+  const [showCreatePatientModal, setShowCreatePatientModal] = useState(false)
+  const [viewingPrescription, setViewingPrescription] = useState<Prescription | null>(null)
+
+  // Form states - Create Patient
+  const [newPatientName, setNewPatientName] = useState("")
+  const [newPatientDob, setNewPatientDob] = useState("")
+  const [newPatientGender, setNewPatientGender] = useState<"male" | "female" | "other" | "">("")
+  const [newPatientPhone, setNewPatientPhone] = useState("")
+  const [newPatientEmail, setNewPatientEmail] = useState("")
+  const [newPatientBloodGroup, setNewPatientBloodGroup] = useState("")
+  const [newPatientHeight, setNewPatientHeight] = useState("")
+  const [newPatientWeight, setNewPatientWeight] = useState("")
+  const [newPatientEmergencyContact, setNewPatientEmergencyContact] = useState("")
+  const [newPatientEmergencyPhone, setNewPatientEmergencyPhone] = useState("")
 
   // Form states - Diagnosis
   const [diseaseName, setDiseaseName] = useState("")
@@ -64,7 +78,13 @@ export function DoctorDashboard() {
         .order("name", { ascending: true })
 
       if (error) throw error
-      setPatients(data || [])
+      
+      // Strict SaaS Patient Isolation: only show patients created by/linked to this doctor
+      const filtered = (data || []).filter(p => 
+        p.notes?.includes(`[doctor:${user?.uniqueId}]`) || 
+        p.uhid === user?.uniqueId
+      )
+      setPatients(filtered)
     } catch (err: any) {
       console.error("Failed to load patients:", err)
       toast.error("Failed to sync patients directory from Supabase database")
@@ -232,6 +252,108 @@ export function DoctorDashboard() {
     }
   }
 
+  // Handle Create Patient Submission
+  const handleCreatePatient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newPatientName.trim()) {
+      toast.error("Patient name is required")
+      return
+    }
+    setSavingAction(true)
+
+    try {
+      const patientUniqueId = Math.floor(100000000 + Math.random() * 900000000).toString()
+      const newPatient = {
+        name: newPatientName.trim(),
+        dob: newPatientDob || null,
+        gender: (newPatientGender || null) as any,
+        blood_group: newPatientBloodGroup || null,
+        height_cm: newPatientHeight ? parseFloat(newPatientHeight) : null,
+        weight_kg: newPatientWeight ? parseFloat(newPatientWeight) : null,
+        relation: "Patient",
+        phone: newPatientPhone || null,
+        email: newPatientEmail || null,
+        emergency_contact: newPatientEmergencyContact || null,
+        emergency_phone: newPatientEmergencyPhone || null,
+        notes: `[doctor:${user?.uniqueId}] Created by Dr. ${user?.name || "Abhishek Panda"}.`,
+        uhid: user?.uniqueId || null,
+        abha_id: patientUniqueId,
+        is_organ_donor: false,
+        allergies: [],
+        lifestyle: {},
+        insurance: []
+      }
+
+      const { data, error } = await supabase
+        .from("family_members")
+        .insert([newPatient])
+        .select()
+
+      if (error) throw error
+
+      toast.success(`Successfully registered patient: ${newPatientName}`)
+      setPatients(prev => [...prev, data[0] as FamilyMember].sort((a, b) => a.name.localeCompare(b.name)))
+      setShowCreatePatientModal(false)
+      
+      // Select the newly created patient
+      handleSelectPatient(data[0] as FamilyMember)
+
+      // Reset form
+      setNewPatientName("")
+      setNewPatientDob("")
+      setNewPatientGender("")
+      setNewPatientPhone("")
+      setNewPatientEmail("")
+      setNewPatientBloodGroup("")
+      setNewPatientHeight("")
+      setNewPatientWeight("")
+      setNewPatientEmergencyContact("")
+      setNewPatientEmergencyPhone("")
+    } catch (err: any) {
+      console.error("Failed to register patient:", err)
+      toast.error(err.message || "Failed to save patient to database")
+    } finally {
+      setSavingAction(false)
+    }
+  }
+
+  // Handle WhatsApp Share
+  const handleWhatsAppShare = (prescription: Prescription) => {
+    if (!selectedPatient) return
+    const phone = selectedPatient.phone || ""
+    if (!phone) {
+      toast.error("Patient does not have a registered phone number. Add it to send details via WhatsApp.")
+      return
+    }
+    const cleanPhone = phone.replace(/[^\d+]/g, "")
+    
+    const medsText = Array.isArray(prescription.medicines)
+      ? (prescription.medicines as any[]).map((m: any) => `• *${m.name}* - ${m.dosage} (${m.schedule || "Daily"})`).join("\n")
+      : "No medicines logged"
+      
+    const message = `*CHRONYX CLINICAL PRESCRIPTION*
+---------------------------------
+*Doctor:* Dr. ${user?.name || "Abhishek Panda"}
+*Hospital/Clinic:* ${user?.hospitalName || "OriginX Labs Clinic"}
+*Date:* ${prescription.prescription_date || new Date().toLocaleDateString()}
+
+*Patient Name:* ${selectedPatient.name}
+*Diagnosis:* ${prescription.diagnosis || "General Consultation"}
+
+*Rx (Medicines):*
+${medsText}
+
+*Advice/Instructions:*
+${prescription.advice || "Follow up as advised."}
+
+---------------------------------
+_Generated securely via Chronyx Health System by OriginX Labs. Designed by Abhishek Panda._
+_Unique Patient ID: ${selectedPatient.abha_id || "N/A"}_`;
+
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, "_blank")
+  }
+
   // Filter patients based on query
   const filteredPatients = patients.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -301,10 +423,19 @@ export function DoctorDashboard() {
         {/* Left Column: Patients Directory List */}
         <Card className="bg-card border-border shadow-sm h-[600px] flex flex-col overflow-hidden">
           <CardHeader className="border-b border-border pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <ClipboardList className="size-4 text-primary" />
-              Patient Records Directory
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground font-sans">
+                <ClipboardList className="size-4 text-primary" />
+                Patient Directory
+              </CardTitle>
+              <Button
+                size="sm"
+                onClick={() => setShowCreatePatientModal(true)}
+                className="h-7 text-[10px] bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1 px-2.5 font-semibold font-mono uppercase tracking-wider"
+              >
+                <Plus className="size-3" /> Create Patient
+              </Button>
+            </div>
             <div className="relative mt-2">
               <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
               <Input
@@ -489,6 +620,24 @@ export function DoctorDashboard() {
                                     Advice: <span className="italic text-slate-400">"{prescription.advice}"</span>
                                   </p>
                                 )}
+                                <div className="flex justify-end gap-1.5 border-t border-border pt-1.5 mt-1.5">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    onClick={() => setViewingPrescription(prescription)}
+                                    className="h-6 text-[9px] px-2 text-cyan-400 hover:text-white hover:bg-cyan-500 font-semibold"
+                                  >
+                                    View & Print
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    onClick={() => handleWhatsAppShare(prescription)}
+                                    className="h-6 text-[9px] px-2 text-emerald-400 hover:text-white hover:bg-emerald-600 font-semibold"
+                                  >
+                                    WhatsApp
+                                  </Button>
+                                </div>
                               </div>
                             ))
                           )}
@@ -769,6 +918,285 @@ export function DoctorDashboard() {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL 4: CREATE PATIENT */}
+      {showCreatePatientModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md overflow-y-auto py-8">
+          <Card className="w-full max-w-lg border border-border bg-card p-6 rounded-2xl shadow-xl relative">
+            <button 
+              onClick={() => setShowCreatePatientModal(false)} 
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-lg bg-white/5 rounded-full size-8 flex items-center justify-center transition-colors"
+            >
+              ✕
+            </button>
+            <div className="flex items-center gap-2.5 mb-5 border-b border-border pb-3">
+              <Users className="size-5 text-primary" />
+              <h3 className="font-bold text-lg text-foreground">Register New Patient</h3>
+            </div>
+            
+            <form onSubmit={handleCreatePatient} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Full Name (Required)</label>
+                <Input 
+                  type="text" 
+                  value={newPatientName}
+                  onChange={e => setNewPatientName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  required
+                  className="bg-slate-50/50 border-border text-sm h-10"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Date of Birth</label>
+                  <Input 
+                    type="date" 
+                    value={newPatientDob}
+                    onChange={e => setNewPatientDob(e.target.value)}
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Gender</label>
+                  <select 
+                    value={newPatientGender}
+                    onChange={e => setNewPatientGender(e.target.value as any)}
+                    className="w-full h-10 rounded-md border border-border bg-slate-50/50 px-3 text-sm text-foreground outline-none focus:border-cyan-500 transition-colors"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Phone Number</label>
+                  <Input 
+                    type="tel" 
+                    value={newPatientPhone}
+                    onChange={e => setNewPatientPhone(e.target.value)}
+                    placeholder="+91 99999 99999"
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Email Address</label>
+                  <Input 
+                    type="email" 
+                    value={newPatientEmail}
+                    onChange={e => setNewPatientEmail(e.target.value)}
+                    placeholder="patient@gmail.com"
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Blood Group</label>
+                  <Input 
+                    type="text" 
+                    value={newPatientBloodGroup}
+                    onChange={e => setNewPatientBloodGroup(e.target.value)}
+                    placeholder="O+"
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Height (cm)</label>
+                  <Input 
+                    type="number" 
+                    value={newPatientHeight}
+                    onChange={e => setNewPatientHeight(e.target.value)}
+                    placeholder="175"
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Weight (kg)</label>
+                  <Input 
+                    type="number" 
+                    step="0.1"
+                    value={newPatientWeight}
+                    onChange={e => setNewPatientWeight(e.target.value)}
+                    placeholder="70"
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Emergency Contact Name</label>
+                  <Input 
+                    type="text" 
+                    value={newPatientEmergencyContact}
+                    onChange={e => setNewPatientEmergencyContact(e.target.value)}
+                    placeholder="Relative Name"
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider block">Emergency Phone</label>
+                  <Input 
+                    type="tel" 
+                    value={newPatientEmergencyPhone}
+                    onChange={e => setNewPatientEmergencyPhone(e.target.value)}
+                    placeholder="Relative Phone"
+                    className="bg-slate-50/50 border-border text-sm h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-border">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowCreatePatientModal(false)}
+                  className="flex-1 h-10 text-sm border-white/10 text-slate-300"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={savingAction}
+                  className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-medium h-10"
+                >
+                  {savingAction ? <Loader2 className="size-4 animate-spin" /> : "Register Patient"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL 5: VIEW PRESCRIPTION & PRINT PREVIEW */}
+      {viewingPrescription && selectedPatient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md overflow-y-auto py-8">
+          <Card className="w-full max-w-2xl border border-white/10 bg-slate-900/90 p-8 rounded-2xl shadow-2xl relative">
+            <button 
+              onClick={() => setViewingPrescription(null)} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-white text-lg bg-white/5 rounded-full size-8 flex items-center justify-center transition-colors print:hidden"
+            >
+              ✕
+            </button>
+            
+            {/* Printable Content Container */}
+            <div id="printable-prescription" className="bg-white text-slate-950 p-8 rounded-xl shadow-inner border border-slate-200">
+              <div className="flex justify-between items-start border-b-2 border-slate-950 pb-4 mb-6">
+                <div>
+                  <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 uppercase font-sans">CHRONYX MEDICAL CLINIC</h1>
+                  <p className="text-xs text-slate-600 font-mono">Product of OriginX Labs · Abhishek Panda</p>
+                  <p className="text-sm font-semibold text-slate-800 mt-1">Dr. {user?.name || "Abhishek Panda"} ({user?.specialization || "General Physician"})</p>
+                  <p className="text-[10px] text-slate-500">License ID: {user?.licenseId || "MCI-9040"} · Hospital: {user?.hospitalName || "OriginX Labs Clinic"}</p>
+                </div>
+                <div className="text-right text-xs font-mono">
+                  <p className="font-bold text-slate-900">Rx ID: {viewingPrescription.id.slice(0, 8).toUpperCase()}</p>
+                  <p className="text-slate-600 mt-1">Date: {viewingPrescription.prescription_date ? new Date(viewingPrescription.prescription_date).toLocaleDateString("en-IN") : new Date().toLocaleDateString("en-IN")}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs mb-6">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Patient Name</span>
+                  <span className="font-bold text-slate-900 text-sm">{selectedPatient.name}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Patient Contact</span>
+                  <span className="font-semibold text-slate-800">{selectedPatient.phone || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Age/Gender</span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedPatient.dob ? `${new Date().getFullYear() - new Date(selectedPatient.dob).getFullYear()} Years` : "N/A"} · {selectedPatient.gender ?? "N/A"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Patient ID (UHID)</span>
+                  <span className="font-mono font-semibold text-slate-800">{selectedPatient.abha_id || "N/A"}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold font-mono">Diagnosis / Indication</span>
+                  <span className="font-bold text-slate-900 block mt-0.5 text-sm">{viewingPrescription.diagnosis || "General Health Review"}</span>
+                </div>
+
+                <div className="border-t border-slate-200 pt-4">
+                  <span className="text-lg font-bold text-slate-900 font-serif italic block mb-3">Rx (Medication Regimen)</span>
+                  
+                  <div className="space-y-3">
+                    {Array.isArray(viewingPrescription.medicines) && (viewingPrescription.medicines as any[]).length > 0 ? (
+                      (viewingPrescription.medicines as any[]).map((med, idx) => (
+                        <div key={idx} className="flex justify-between items-start border-b border-dashed border-slate-200 pb-2 text-xs">
+                          <div>
+                            <span className="font-bold text-slate-900">{idx + 1}. {med.name}</span>
+                            <span className="text-slate-500 block text-[10px] mt-0.5">Frequency/Schedule: {med.schedule || "As directed"}</span>
+                          </div>
+                          <span className="font-mono text-slate-800 font-semibold">{med.dosage}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-500 italic">No medicines listed.</p>
+                    )}
+                  </div>
+                </div>
+
+                {viewingPrescription.advice && (
+                  <div className="border-t border-slate-200 pt-4">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Advice & Clinical Instructions</span>
+                    <p className="text-xs text-slate-800 italic mt-1 leading-relaxed">"{viewingPrescription.advice}"</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-slate-300 pt-6 mt-12 flex justify-between items-end text-[10px] text-slate-500 font-mono">
+                <div>
+                  <p>Electronically Verified via Chronyx Systems</p>
+                  <p className="text-[9px]">Designed by Abhishek Panda · SaaS Tenant Isolated</p>
+                </div>
+                <div className="text-center border-t border-slate-400 w-40 pt-1 text-slate-700">
+                  <p className="font-bold">Dr. {user?.name || "Abhishek Panda"}</p>
+                  <p className="text-[8px] uppercase tracking-wider">Authorized Signature</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal action buttons */}
+            <div className="flex gap-3 mt-6 print:hidden">
+              <Button 
+                onClick={() => setViewingPrescription(null)}
+                variant="outline"
+                className="flex-1 border-white/10 hover:bg-white/5 h-11 text-sm font-semibold text-slate-300"
+              >
+                Close
+              </Button>
+              <Button 
+                onClick={() => handleWhatsAppShare(viewingPrescription)}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold h-11 text-sm flex items-center justify-center gap-1.5"
+              >
+                Send via WhatsApp
+              </Button>
+              <Button 
+                onClick={() => window.print()}
+                className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold h-11 text-sm flex items-center justify-center gap-1.5"
+              >
+                Print / Save PDF
+              </Button>
+            </div>
           </Card>
         </div>
       )}
