@@ -598,7 +598,7 @@ export function LandingPage() {
 
           {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-            {[["#features", "Features"], ["#ai", "DigiBot AI"], ["#doctors", "For Doctors"], ["#pricing", "Pricing"]].map(([href, label]) => (
+            {[["#features", "Features"], ["#ai", "DigiBot AI"], ["#doctors", "For Doctors"]].map(([href, label]) => (
               <a key={href} href={href} className="hover:text-cyan-400 transition-colors duration-200"
                 onMouseEnter={() => setCursorBig(true)} onMouseLeave={() => setCursorBig(false)}>
                 {label}
@@ -1388,7 +1388,7 @@ export function LandingPage() {
             <div>
               <div className="text-white font-semibold mb-4">Product</div>
               <div className="space-y-2 text-slate-400 text-sm">
-                {["Features", "DigiBot AI", "For Doctors", "Pricing", "Security"].map(l => (
+                {["Features", "DigiBot AI", "For Doctors", "Security"].map(l => (
                   <div key={l} className="hover:text-cyan-400 cursor-pointer transition-colors">{l}</div>
                 ))}
               </div>
