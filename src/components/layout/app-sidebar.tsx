@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom"
 import {
   LayoutDashboard, Users, FileText, Pill, Syringe,
-  FlaskConical, Clock, MessageSquare, Search, TrendingUp,
+  FlaskConical, Clock, Search, TrendingUp,
   Stethoscope, DollarSign, Heart, ShieldAlert, Activity,
   Plus
 } from "lucide-react"
@@ -28,7 +28,6 @@ const navItems = [
   { label: "Health Timeline", icon: Clock, path: "/timeline" },
   { label: "Analytics", icon: TrendingUp, path: "/analytics" },
   { label: "Expenses", icon: DollarSign, path: "/expenses" },
-  { label: "DigiBot AI", icon: MessageSquare, path: "/healthbot" },
   { label: "Search", icon: Search, path: "/search" },
   { label: "Emergency", icon: ShieldAlert, path: "/emergency" },
 ]
