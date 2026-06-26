@@ -8,6 +8,15 @@ interface MemberTab {
   openedAt: number
 }
 
+export interface UserProfile {
+  email: string
+  name: string
+  avatarUrl?: string
+  specialization?: string
+  licenseId?: string
+  hospitalName?: string
+}
+
 interface AppContextType {
   members: FamilyMember[]
   tabs: MemberTab[]
@@ -23,6 +32,13 @@ interface AppContextType {
   closeTab: (tabId: string) => void
   setActiveTab: (tabId: string) => void
   getMemberById: (id: string) => FamilyMember | undefined
+  // Auth state
+  user: UserProfile | null
+  role: "individual" | "doctor" | null
+  isOnboarded: boolean
+  loginWithGmail: (email: string, name: string) => void
+  onboardUser: (role: "individual" | "doctor", name: string, details?: Partial<UserProfile>) => void
+  logout: () => void
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -31,6 +47,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { members, loading, error, fetchMembers, createMember, updateMember, deleteMember } = useFamilyMembers()
   const [tabs, setTabs] = useState<MemberTab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
+
+  // Auth States with localStorage persistence
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem("chronyx_user")
+    return saved ? JSON.parse(saved) : null
+  })
+  const [role, setRole] = useState<"individual" | "doctor" | null>(() => {
+    return localStorage.getItem("chronyx_role") as any ?? null
+  })
+  const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
+    return localStorage.getItem("chronyx_onboarded") === "true"
+  })
+
+  const loginWithGmail = useCallback((email: string, name: string) => {
+    const newUser = { email, name, avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${email}` }
+    setUser(newUser)
+    localStorage.setItem("chronyx_user", JSON.stringify(newUser))
+  }, [])
+
+  const onboardUser = useCallback((selectedRole: "individual" | "doctor", fullName: string, details?: Partial<UserProfile>) => {
+    setRole(selectedRole)
+    setIsOnboarded(true)
+    setUser(prev => {
+      if (!prev) return null
+      const updated = { ...prev, name: fullName, ...details }
+      localStorage.setItem("chronyx_user", JSON.stringify(updated))
+      return updated
+    })
+    localStorage.setItem("chronyx_role", selectedRole)
+    localStorage.setItem("chronyx_onboarded", "true")
+  }, [])
+
+  const logout = useCallback(() => {
+    setUser(null)
+    setRole(null)
+    setIsOnboarded(false)
+    localStorage.removeItem("chronyx_user")
+    localStorage.removeItem("chronyx_role")
+    localStorage.removeItem("chronyx_onboarded")
+    setTabs([])
+    setActiveTabId(null)
+  }, [])
 
   useEffect(() => {
     fetchMembers()
@@ -95,7 +153,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       members, tabs, activeTabId, activeMember,
       loading, error, refetchMembers: fetchMembers,
       createMember, updateMember, deleteMember,
-      openMemberTab, closeTab, setActiveTab, getMemberById
+      openMemberTab, closeTab, setActiveTab, getMemberById,
+      user, role, isOnboarded, loginWithGmail, onboardUser, logout
     }}>
       {children}
     </AppContext.Provider>
