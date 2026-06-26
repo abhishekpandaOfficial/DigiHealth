@@ -86,3 +86,24 @@ Chronyx AI is designed to communicate naturally. It supports:
 - **Product Of**: OriginX Labs
 - All database tables are configured with **Row Level Security (RLS)**.
 - Sensitive API keys are encoded using **Base64** and loaded strictly from secure environment variables in runtime, keeping keys hidden in plain text source files.
+
+---
+
+## 🌐 Deploying to Vercel
+
+To deploy Chronyx to Vercel and ensure it works automatically on every push, you must configure the environment variables in your Vercel Project Settings:
+
+1. In your **Vercel Dashboard**, select your **Chronyx** project.
+2. Go to **Settings** -> **Environment Variables**.
+3. Add the following key-value pairs (ensure the checkbox for all environments: *Production*, *Preview*, and *Development* is selected):
+
+| Key | Value | Description |
+| :--- | :--- | :--- |
+| `VITE_SUPABASE_URL` | `https://snjviycvsssyfgvbmbba.supabase.co` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | `sb_publishable_npHeWvKyTVNH4JtwtM-UPA_ILyPjzK9` | Your Supabase publishable anon key |
+| `VITE_GEMINI_API_KEY` | `QVEuQWI4Uk42TEZpM2dZaEZtLW51VzV5SV9lc09obWQ0aVhncG1kMG5TRlE5dG5aQnVTYmc=` | Base64-encoded Gemini API key |
+| `VITE_SARVAM_API_KEY` | `c2tfZnh4N2JvbXZfRm5PQlJKYmg4QVlGcjEyTWpIMmlxVkhC` | Base64-encoded Sarvam AI key |
+
+4. After saving the variables, trigger a redeployment in **Deployments** -> click the three dots on the latest deployment -> select **Redeploy**.
+5. Once complete, your project will load data successfully. Any subsequent pushes to GitHub will automatically trigger new builds that work out-of-the-box!
+
