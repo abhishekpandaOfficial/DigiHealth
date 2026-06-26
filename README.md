@@ -1,11 +1,12 @@
-# DigiHealth — Premium Family Health Platform
+# Chronyx — Premium Family Health Platform
 
-DigiHealth is a modern, state-of-the-art family health record management platform built with React, TypeScript, Tailwind CSS, Supabase, and Google Gemini. It allows families to track medical histories, prescriptions, medications, vaccinations, doctor visits, lab reports, expenses, growth records, and general health vitals in a single secure dashboard.
+Chronyx is a modern, state-of-the-art family health record management platform designed and developed by **Abhishek Panda** of **OriginX Labs**. Built with React, TypeScript, Tailwind CSS, Supabase, and Google Gemini, it allows families to track medical histories, prescriptions, medications, vaccinations, doctor visits, lab reports, expenses, growth records, and general health vitals in a single secure, premium dashboard.
 
 ## 🚀 Key Features
 
 - **Multi-Member Support**: Manage multiple family member profiles with details like DOB, blood group, height, weight, insurance, and medical conditions.
-- **DigiBot AI (Gemini Powered)**: An AI assistant that compiles the selected family member's entire medical record history to answer queries, summarize records, and help find insights. Includes browser-based Speech-to-Text (STT) and Text-to-Speech (TTS) using a natural, clear female Indian English voice.
+- **Chronyx AI (Gemini + Sarvam AI Powered)**: An AI assistant that compiles the selected family member's entire medical record history to answer queries, summarize records, and help find insights. Includes browser-based Speech-to-Text (STT) and natural human-like voice synthesis (TTS) using Sarvam AI (supporting English, Hindi, and Odia native vocal accents).
+- **Interactive ECG Visualizer**: Real-time canvas-drawn audio waveform/ECG heart monitor sweeps that bounce and pulse based on user microphone and bot voice output.
 - **Medicine Inventory & Schedule**: Track daily medication trackers (morning, afternoon, evening, night) and get notified about expiring or low-quantity medicines.
 - **Health Records**: Manage comprehensive histories of vaccinations, diseases/symptoms, doctor consultations, lab reports, growth metrics, and health expenses.
 - **Row-Level Security (RLS)**: Secure data structure in Supabase PostgreSQL protecting records for authenticated and anon roles.
@@ -21,45 +22,38 @@ DigiHealth is a modern, state-of-the-art family health record management platfor
                      │  (Vite + TS + Tailwind + Lucide)  │
                      └─────────────────┬─────────────────┘
                                        │
-                ┌──────────────────────┴──────────────────────┐
-                ▼                                             ▼
-  ┌───────────────────────────┐                 ┌───────────────────────────┐
-  │      Supabase Backend     │                 │     Google Gemini API     │
-  │  (PostgreSQL + Storage)   │                 │   (gemini-2.5-flash AI)   │
-  └───────────────────────────┘                 └───────────────────────────┘
+                 ┌──────────────────────┴──────────────────────┐
+                 ▼                                             ▼
+   ┌───────────────────────────┐                 ┌───────────────────────────┐
+   │      Supabase Backend     │                 │   Gemini & Sarvam APIs    │
+   │  (PostgreSQL + Storage)   │                 │   (Content Gen & Voice)   │
+   └───────────────────────────┘                 └───────────────────────────┘
 ```
 
-- **Frontend**: Vite, React 19, TypeScript, Tailwind CSS, Lucide React icons, Radix UI primitives.
-- **Backend (Supabase)**: PostgreSQL database (16 core tables with RLS and index optimizations), Supabase Storage buckets for secure file uploads.
-- **AI Integrations**: Google Gemini REST API (`gemini-2.5-flash` model), Browser Web Speech API for voice synthesis and voice recognition.
+- **Frontend**: React 19, Vite, Tailwind CSS, Recharts (Vitals graphing)
+- **Database / Backend**: Supabase (PostgreSQL with RLS + Storage Buckets)
+- **AI Intelligence**: Gemini 2.5 Flash API (REST client)
+- **AI Vocal Accents**: Sarvam AI Text-to-Speech REST API (REST client + Web Audio Context)
 
 ---
 
-## 💻 Installation & Local Setup
+## 🚀 Quick Setup & Installation
 
-### 1. Clone & Install Dependencies
-First, clone the repository and install all npm dependencies:
+### 1. Clone the Project & Install Dependencies
 ```bash
+git clone https://github.com/abhishekpandaOfficial/DigiHealth.git
+cd DigiHealth
 npm install
 ```
 
 ### 2. Configure Environment Variables
-Create a `.env` file in the project root folder and specify your connection details:
+Create a `.env` file in the project root:
 ```env
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-publishable-key
-
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-publishable-key
-
-# Base64-encoded Gemini API Key
-VITE_GEMINI_API_KEY=your-base64-encoded-gemini-key
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GEMINI_API_KEY=your_base64_encoded_gemini_key
+VITE_SARVAM_API_KEY=your_base64_encoded_sarvam_key
 ```
-
-> [!TIP]
-> To base64-encode your Gemini API key, run the following in your terminal:
-> `echo -n "YOUR_API_KEY" | base64`
-> Paste the output value as the `VITE_GEMINI_API_KEY` parameter.
 
 ### 3. Database Migration
 Deploy the SQL schemas directly on your Supabase dashboard or via CLI:
@@ -77,14 +71,18 @@ Open [http://localhost:5173](http://localhost:5173) in your browser to view the 
 
 ---
 
-## 🎙️ DigiBot AI Voice Capabilities
+## 🎙️ Chronyx AI Voice & Visualizer Capabilities
 
-DigiBot is designed to communicate naturally. It supports:
+Chronyx AI is designed to communicate naturally. It supports:
 - **Listening (Speech-to-Text)**: Click the **Mic** button in the bot footer and speak. It will capture your voice, convert it to text, and automatically send your query.
-- **Speaking (Text-to-Speech)**: DigiBot replies out loud using a natural, clear female Indian English voice. You can toggle audio mute/unmute at any time using the **Speaker** icon next to the input.
+- **Speaking (Text-to-Speech)**: Replies out loud using premium, human-like Indian accent native voices via Sarvam AI. Select between **Female (Shreya)** and **Male (Shubh)** voices from the dropdown next to the language selector.
+- **Microphone Waveform**: Real-time canvas ECG line sweeps respond to user speech volume and frequencies.
+- **Audio Output Waveform**: Glowing double-sine waves animate relative to the bot's speaking frequencies and pitch.
 
 ---
 
-## 🔒 Security
+## 🔒 Security & Branding
+- **Developed By**: Abhishek Panda
+- **Product Of**: OriginX Labs
 - All database tables are configured with **Row Level Security (RLS)**.
 - Sensitive API keys are encoded using **Base64** and loaded strictly from secure environment variables in runtime, keeping keys hidden in plain text source files.

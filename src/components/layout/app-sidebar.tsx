@@ -41,10 +41,10 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border pb-3">
         <div className="flex items-center gap-2 px-2 py-1">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shrink-0">
-            DH
+            CX
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="font-semibold text-sm leading-none">DigiHealth</span>
+            <span className="font-semibold text-sm leading-none">Chronyx</span>
             <span className="text-xs text-muted-foreground">Family Health Platform</span>
           </div>
         </div>
@@ -124,13 +124,20 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border pt-2">
-        <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:justify-center">
-          <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-            <Heart className="size-4 text-red-500" />
-            <span className="text-xs text-muted-foreground">{members.length} member{members.length !== 1 ? "s" : ""}</span>
+      <SidebarFooter className="border-t border-sidebar-border pt-2 pb-3">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:justify-center">
+            <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
+              <Heart className="size-4 text-red-500 animate-pulse" />
+              <span className="text-xs text-muted-foreground">{members.length} member{members.length !== 1 ? "s" : ""}</span>
+            </div>
+            <ModeToggle />
           </div>
-          <ModeToggle />
+          <div className="px-2 text-[10px] text-muted-foreground/60 leading-tight group-data-[collapsible=icon]:hidden font-mono">
+            Designed by <span className="font-medium text-muted-foreground">Abhishek Panda</span>
+            <br />
+            Product of <span className="font-medium text-cyan-600 dark:text-cyan-400">OriginX Labs</span>
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

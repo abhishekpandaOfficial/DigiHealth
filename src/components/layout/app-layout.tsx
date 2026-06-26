@@ -20,14 +20,14 @@ const routeLabels: Record<string, string> = {
   "/timeline": "Health Timeline",
   "/analytics": "Analytics",
   "/expenses": "Expenses",
-  "/healthbot": "DigiBot AI",
+  "/healthbot": "Chronyx AI",
   "/search": "Search",
   "/emergency": "Emergency Profile",
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
-  const label = routeLabels[location.pathname] ?? "DigiHealth"
+  const label = routeLabels[location.pathname] ?? "Chronyx"
   const [isAppLoading, setIsAppLoading] = useState(true)
 
   useEffect(() => {
@@ -51,9 +51,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold tracking-widest bg-gradient-to-r from-cyan-400 via-indigo-300 to-violet-500 bg-clip-text text-transparent animate-pulse font-sans">
-            DIGIHEALTH INITIALIZING
+            CHRONYX INITIALIZING
           </h1>
-          <p className="text-xs text-cyan-400/60 font-mono">SECURE FAMILY HEALTH SYSTEMS ONLINE</p>
+          <p className="text-xs text-cyan-400/60 font-mono">CHRONYX HEALTH SYSTEM BY ORIGINX LABS | ABHISHEK PANDA</p>
         </div>
 
         {/* ECG Heart sweep monitor */}

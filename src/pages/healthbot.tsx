@@ -96,7 +96,7 @@ export function HealthBot() {
     setMessages([{
       role: "assistant",
       content: activeMember
-        ? `Hello! I'm DigiBot, your DigiHealth AI assistant. I have access to ${activeMember.name}'s health records. You can ask me about medications, vaccinations, lab results, medical history, or any health-related questions. You can also talk to me using the microphone button below!\n\n**Disclaimer:** I provide health information for educational purposes only. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment.`
+        ? `Hello! I'm Chronyx AI, your health assistant. I have access to ${activeMember.name}'s health records. You can ask me about medications, vaccinations, lab results, medical history, or any health-related questions. You can also talk to me using the microphone button below!\n\n**Disclaimer:** I provide health information for educational purposes only. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment.`
         : "Hello! Please select a family member from the sidebar to get started. I'll then have access to their health records and can answer questions about their medical history.",
       timestamp: new Date(),
     }])
@@ -237,7 +237,7 @@ Total family members: ${members.length}
 
     try {
       const context = await buildContext()
-      const systemPrompt = `You are DigiBot AI, a helpful and empathetic digital health assistant for a family health management platform. You have access to a family member's complete health records provided in the context below.
+      const systemPrompt = `You are Chronyx AI, a helpful and empathetic digital health assistant for a family health management platform, developed by Abhishek Panda for Chronyx Systems. You have access to a family member's complete health records provided in the context below.
 
 IMPORTANT GUIDELINES:
 - Always be helpful, empathetic, and informative
@@ -298,7 +298,7 @@ ${context}`
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="mb-4">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Bot className="size-6 text-primary animate-bounce" /> DigiBot AI
+          <Bot className="size-6 text-primary animate-bounce" /> Chronyx AI
         </h1>
         <p className="text-muted-foreground text-sm mt-0.5">
           {activeMember ? `Chatting about ${activeMember.name}'s health records` : "Select a family member to start"}
@@ -335,7 +335,7 @@ ${context}`
               </div>
               <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2 shadow-sm">
                 <Loader2 className="size-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">{contextLoading ? "Loading health records..." : "DigiBot is thinking..."}</span>
+                <span className="text-sm text-muted-foreground">{contextLoading ? "Loading health records..." : "Chronyx AI is thinking..."}</span>
               </div>
             </div>
           )}
@@ -361,7 +361,7 @@ ${context}`
         {/* Disclaimer */}
         <div className="px-4 py-2 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-100/50 dark:border-amber-900/20">
           <AlertTriangle className="size-3.5 shrink-0 text-amber-500" />
-          <span>DigiBot provides info for reference only. Always seek professional advice for medical concerns.</span>
+          <span>Chronyx AI provides info for reference only. Always seek professional advice for medical concerns.</span>
         </div>
 
         {/* Input */}
@@ -369,7 +369,7 @@ ${context}`
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => setMessages([{ role: "assistant", content: "Chat cleared. I'm DigiBot, how can I help you today?", timestamp: new Date() }])}
+            onClick={() => setMessages([{ role: "assistant", content: "Chat cleared. I'm Chronyx AI, how can I help you today?", timestamp: new Date() }])}
             title="Clear Chat"
           >
             <Trash2 className="size-4 text-muted-foreground hover:text-destructive transition-colors" />
@@ -384,7 +384,7 @@ ${context}`
                 window.speechSynthesis.cancel()
               }
             }} 
-            title={isMuted ? "Unmute DigiBot Voice" : "Mute DigiBot Voice"}
+            title={isMuted ? "Unmute Chronyx AI Voice" : "Mute Chronyx AI Voice"}
             className={!isMuted ? "text-primary hover:text-primary hover:bg-primary/5" : "text-muted-foreground"}
           >
             {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
@@ -394,7 +394,7 @@ ${context}`
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-            placeholder={activeMember ? `Ask DigiBot about ${activeMember.name}'s health...` : "Select a member first..."}
+            placeholder={activeMember ? `Ask Chronyx AI about ${activeMember.name}'s health...` : "Select a member first..."}
             disabled={loading}
             className="flex-1 border-slate-200 dark:border-slate-700 focus-visible:ring-primary"
           />

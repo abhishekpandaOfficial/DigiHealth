@@ -160,7 +160,7 @@ export function FloatingDigiBot() {
     setMessages([{
       role: "assistant",
       content: activeMember
-        ? `Hello! I'm DigiBot, your Jarvis-style health assistant. I have access to ${activeMember.name}'s records. Ask me anything in English, Hindi, or Odia! You can speak using the microphone button.`
+        ? `Hello! I'm Chronyx AI, your Jarvis-style health assistant. I have access to ${activeMember.name}'s records. Ask me anything in English, Hindi, or Odia! You can speak using the microphone button.`
         : "Hello! Select a family member from the sidebar so I can access their health history and assist you.",
       timestamp: new Date(),
     }])
@@ -582,7 +582,7 @@ Total family members: ${members.length}
 
     try {
       const context = await buildContext()
-      const systemPrompt = `You are DigiBot, a highly advanced Jarvis-style health assistant for DigiHealth. You are empathetic, responsive, and direct. You have access to the selected family member's complete medical history below.
+      const systemPrompt = `You are Chronyx AI, a highly advanced Jarvis-style health assistant for Chronyx Systems, created by Abhishek Panda for OriginX Labs. You are empathetic, responsive, and direct. You have access to the selected family member's complete medical history below.
 
 CRITICAL INSTRUCTIONS:
 - You must respond in the language the user is speaking/asking in.
@@ -650,8 +650,8 @@ ${context}`
                 <Heart className="size-3 text-white" />
               </div>
               <div>
-                <span className="font-semibold text-sm text-foreground">DigiBot AI</span>
-                <span className="text-[10px] text-cyan-600 dark:text-cyan-400 block -mt-1">Jarvis Mode Active</span>
+                <span className="font-semibold text-sm text-foreground font-mono">Chronyx AI</span>
+                <span className="text-[10px] text-cyan-600 dark:text-cyan-400 block -mt-1 font-mono">Jarvis Mode Active</span>
               </div>
             </div>
             
@@ -736,7 +736,7 @@ ${context}`
                   <Loader2 className="size-3 text-cyan-500 animate-spin" />
                 </div>
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl rounded-tl-sm px-3 py-2 flex items-center gap-1.5 shadow-sm">
-                  <span className="text-[11px] text-muted-foreground">{contextLoading ? "Reading records..." : "DigiBot is thinking..."}</span>
+                  <span className="text-[11px] text-muted-foreground font-mono">{contextLoading ? "Reading records..." : "Chronyx AI is thinking..."}</span>
                 </div>
               </div>
             )}
@@ -761,7 +761,7 @@ ${context}`
               variant="ghost" 
               size="icon" 
               className="size-8 text-muted-foreground hover:text-red-500"
-              onClick={() => setMessages([{ role: "assistant", content: "Chat cleared. DigiBot ready.", timestamp: new Date() }])}
+              onClick={() => setMessages([{ role: "assistant", content: "Chat cleared. Chronyx AI ready.", timestamp: new Date() }])}
               title="Clear Chat"
             >
               <Trash2 className="size-4" />

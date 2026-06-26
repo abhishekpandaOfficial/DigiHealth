@@ -160,7 +160,7 @@ export function Dashboard() {
         </div>
         <div className="space-y-2">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-            Welcome to DigiHealth
+            Welcome to Chronyx
           </h1>
           <p className="text-muted-foreground max-w-md">
             Your complete family health management platform. Start by adding your first family member.
