@@ -331,43 +331,7 @@ const features = [
   { icon: "🌐", title: "Works Everywhere", desc: "Native support for English, Hindi, and Odia. More Indian languages coming soon.", color: "#f59e0b" },
 ]
 
-// ─── Pricing Data ─────────────────────────────────────────────────────────────
-const pricingPlans = [
-  {
-    name: "Personal",
-    price: "Free",
-    period: "forever",
-    desc: "For individuals and families",
-    features: ["Up to 5 family members", "Full health records", "DigiBot AI (50 queries/mo)", "WhatsApp sharing", "Basic analytics"],
-    cta: "Start Free",
-    gradient: "from-cyan-500/20 to-blue-600/20",
-    border: "border-cyan-500/30",
-    glow: "#06b6d4",
-  },
-  {
-    name: "Doctor Pro",
-    price: "₹999",
-    period: "per month",
-    desc: "For clinical practitioners",
-    features: ["Unlimited patients", "Secure doctor portal", "Prescription PDF printing", "WhatsApp prescriptions", "Patient isolation", "Priority support", "DigiBot unlimited"],
-    cta: "Start 14-day Trial",
-    gradient: "from-violet-500/30 to-purple-600/30",
-    border: "border-violet-500/40",
-    glow: "#8b5cf6",
-    featured: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "contact us",
-    desc: "For clinics and hospitals",
-    features: ["Multi-doctor support", "EMR integration", "Custom branding", "Dedicated infrastructure", "SLA guarantee", "Compliance reports", "On-premise option"],
-    cta: "Contact Sales",
-    gradient: "from-emerald-500/20 to-teal-600/20",
-    border: "border-emerald-500/30",
-    glow: "#10b981",
-  },
-]
+
 
 // ─── Main Landing Page ────────────────────────────────────────────────────────
 export function LandingPage() {
@@ -1146,118 +1110,217 @@ export function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          TESTIMONIALS
+          TESTIMONIALS — Horizontal Scroll Marquee
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-32" style={{ background: "rgba(15,23,42,0.3)" }}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="section-heading text-4xl sm:text-5xl font-black"
-              style={{ background: "linear-gradient(135deg, #fff, #94a3b8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Loved by patients & doctors.
-            </h2>
+      <section style={{ background: "#08101f", paddingTop: 80, paddingBottom: 80, overflow: "hidden" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 48, padding: "0 24px" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "6px 16px", borderRadius: 999, marginBottom: 16,
+            background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)",
+          }}>
+            <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.15em", color: "#f59e0b", fontWeight: 700 }}>
+              WHAT PEOPLE ARE SAYING
+            </span>
           </div>
+          <h2 style={{
+            fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 900, color: "#ffffff",
+            margin: "0 0 12px", lineHeight: 1.15,
+          }}>
+            Loved by patients &amp; doctors.
+          </h2>
+          <p style={{ fontSize: 16, color: "#64748b", maxWidth: 460, margin: "0 auto", lineHeight: 1.6 }}>
+            Real feedback from people transforming their health journey with DigiHealth.
+          </p>
+        </div>
 
-          <div className="testimonials-grid grid grid-cols-1 md:grid-cols-2 gap-6">
-            {testimonials.map((t) => (
+        {/* Marquee track */}
+        <div style={{ position: "relative" }}>
+          {/* Left fade */}
+          <div style={{
+            position: "absolute", left: 0, top: 0, bottom: 0, width: 80, zIndex: 2, pointerEvents: "none",
+            background: "linear-gradient(to right, #08101f, transparent)",
+          }} />
+          {/* Right fade */}
+          <div style={{
+            position: "absolute", right: 0, top: 0, bottom: 0, width: 80, zIndex: 2, pointerEvents: "none",
+            background: "linear-gradient(to left, #08101f, transparent)",
+          }} />
+
+          {/* Scrolling row — duplicate for seamless loop */}
+          <div
+            className="testimonial-marquee"
+            style={{
+              display: "flex",
+              gap: 20,
+              width: "max-content",
+              animation: "marquee-scroll 32s linear infinite",
+              paddingLeft: 32,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.animationPlayState = "paused")}
+            onMouseLeave={e => (e.currentTarget.style.animationPlayState = "running")}
+          >
+            {/* Render twice for seamless loop */}
+            {[...testimonials, ...testimonials].map((t, idx) => (
               <div
-                key={t.name}
-                className="testimonial-card rounded-3xl p-6 transition-all duration-300"
-                style={{ background: "rgba(15,23,42,0.8)", border: `1px solid ${t.color}20`, backdropFilter: "blur(20px)" }}
-                onMouseOver={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLDivElement).style.borderColor = `${t.color}40` }}
-                onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.borderColor = `${t.color}20` }}
+                key={`${t.name}-${idx}`}
+                style={{
+                  width: 300,
+                  flexShrink: 0,
+                  background: "#111827",
+                  border: `2px solid ${t.color}35`,
+                  borderRadius: 20,
+                  padding: "20px 22px",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.6)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                  cursor: "default",
+                  transition: "transform 0.3s, box-shadow 0.3s, border-color 0.3s",
+                }}
+                onMouseOver={e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.transform = "translateY(-6px)"
+                  el.style.boxShadow = `0 16px 48px rgba(0,0,0,0.7), 0 0 30px ${t.color}25`
+                  el.style.borderColor = `${t.color}70`
+                }}
+                onMouseOut={e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.transform = "translateY(0)"
+                  el.style.boxShadow = "0 4px 24px rgba(0,0,0,0.6)"
+                  el.style.borderColor = `${t.color}35`
+                }}
               >
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} style={{ color: "#f59e0b" }}>★</span>
+                {/* Stars row */}
+                <div style={{ display: "flex", gap: 3 }}>
+                  {[...Array(5)].map((_, si) => (
+                    <svg key={si} width="15" height="15" viewBox="0 0 20 20" fill="#f59e0b">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
                   ))}
                 </div>
-                <p className="text-slate-300 text-base leading-relaxed mb-6">"{t.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold"
-                    style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}80)` }}>
+
+                {/* 2-line clamped quote */}
+                <p style={{
+                  fontSize: 14, color: "#e2e8f0", lineHeight: 1.55, margin: 0,
+                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  fontStyle: "italic",
+                }}>
+                  "{t.quote}"
+                </p>
+
+                {/* Divider */}
+                <div style={{ height: 1, background: `${t.color}20` }} />
+
+                {/* Author */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                    background: `linear-gradient(135deg, ${t.color}, ${t.color}60)`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 14, fontWeight: 900, color: "#fff",
+                    boxShadow: `0 0 12px ${t.color}40`,
+                  }}>
                     {t.avatar}
                   </div>
                   <div>
-                    <div className="font-bold text-white">{t.name}</div>
-                    <div className="text-xs text-slate-400">{t.role}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.3 }}>{t.name}</div>
+                    <div style={{ fontSize: 11, color: t.color, marginTop: 2, fontWeight: 600 }}>{t.role}</div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
+
+        <style>{`
+          @keyframes marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .testimonial-marquee { will-change: transform; }
+        `}</style>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          PRICING
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="pricing" ref={pricingRef} className="py-32">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{ background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)" }}>
-              <span className="text-xs font-mono text-cyan-400 tracking-widest">SIMPLE PRICING</span>
-            </div>
-            <h2 className="section-heading text-4xl sm:text-5xl font-black"
-              style={{ background: "linear-gradient(135deg, #fff, #94a3b8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Start free. Scale as you grow.
-            </h2>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {pricingPlans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`pricing-card rounded-3xl p-6 relative transition-all duration-300 ${plan.featured ? "md:scale-105" : ""}`}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          TRY FOR FREE SECTION
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section ref={pricingRef} className="py-24" style={{ background: "#070d1a" }}>
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="rounded-3xl overflow-hidden relative"
+            style={{
+              background: "linear-gradient(135deg, #0f172a, #1e1b4b, #0c2a4a)",
+              border: "1px solid rgba(6,182,212,0.25)",
+              boxShadow: "0 0 80px rgba(6,182,212,0.12), 0 40px 80px rgba(0,0,0,0.5)",
+            }}>
+            {/* Glow orbs inside card */}
+            <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(ellipse, rgba(6,182,212,0.15), transparent)", filter: "blur(40px)", transform: "translateY(-50%)" }} />
+            <div className="absolute bottom-0 right-1/4 w-64 h-64 rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.15), transparent)", filter: "blur(40px)", transform: "translateY(50%)" }} />
+
+            <div className="relative z-10 px-8 py-16 md:px-16 text-center">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8"
+                style={{ background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.4)" }}>
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="text-xs font-mono text-cyan-400 tracking-widest">COMPLETELY FREE TO START</span>
+              </div>
+
+              {/* Heading */}
+              <h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight">
+                Your health,{" "}
+                <span style={{ background: "linear-gradient(135deg, #06b6d4, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                  on us.
+                </span>
+              </h2>
+              <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: "#94a3b8" }}>
+                Get started completely free — no credit card required. Manage your full family health records, consult with DigiBot AI, and access every core feature for free.
+              </p>
+
+              {/* Feature chips */}
+              <div className="flex flex-wrap justify-center gap-3 mb-12">
+                {[
+                  { icon: "✓", label: "Full health records", color: "#10b981" },
+                  { icon: "✓", label: "Family health hub", color: "#10b981" },
+                  { icon: "✓", label: "DigiBot AI included", color: "#06b6d4" },
+                  { icon: "✓", label: "No credit card needed", color: "#8b5cf6" },
+                  { icon: "✓", label: "Works in 3 languages", color: "#f59e0b" },
+                ].map(chip => (
+                  <div key={chip.label} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+                    style={{ background: `${chip.color}15`, border: `1px solid ${chip.color}40`, color: chip.color }}>
+                    <span className="font-bold">{chip.icon}</span>
+                    {chip.label}
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA Button */}
+              <button
+                onClick={() => setShowAuthModal(true)}
+                onMouseEnter={() => setCursorBig(true)} onMouseLeave={() => setCursorBig(false)}
+                className="text-xl font-black px-12 py-5 rounded-2xl transition-all duration-300 active:scale-95 inline-flex items-center gap-3"
                 style={{
-                  background: plan.featured ? `linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2))` : "rgba(15,23,42,0.8)",
-                  border: plan.featured ? "1px solid rgba(139,92,246,0.5)" : `1px solid ${plan.glow}20`,
-                  boxShadow: plan.featured ? "0 0 60px rgba(139,92,246,0.2)" : "none",
+                  background: "linear-gradient(135deg, #06b6d4, #8b5cf6)",
+                  color: "white",
+                  boxShadow: "0 0 50px rgba(6,182,212,0.45), 0 20px 60px rgba(0,0,0,0.4)",
                 }}
               >
-                {plan.featured && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold"
-                    style={{ background: "linear-gradient(135deg, #8b5cf6, #06b6d4)", color: "white" }}>
-                    MOST POPULAR
-                  </div>
-                )}
+                Try for Free
+                <span style={{ fontSize: 22 }}>→</span>
+              </button>
 
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
-                  <p className="text-slate-400 text-sm">{plan.desc}</p>
-                </div>
-
-                <div className="mb-6">
-                  <span className="text-4xl font-black text-white">{plan.price}</span>
-                  <span className="text-slate-400 text-sm ml-2">/{plan.period}</span>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-slate-300">
-                      <span style={{ color: plan.glow }}>✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  onMouseEnter={() => setCursorBig(true)} onMouseLeave={() => setCursorBig(false)}
-                  className="w-full py-3 rounded-2xl font-bold text-sm transition-all duration-300 active:scale-95"
-                  style={plan.featured ? {
-                    background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
-                    color: "white",
-                    boxShadow: "0 0 30px rgba(139,92,246,0.4)",
-                  } : {
-                    background: `${plan.glow}15`,
-                    border: `1px solid ${plan.glow}30`,
-                    color: plan.glow,
-                  }}
-                >
-                  {plan.cta}
+              <p className="mt-5 text-sm" style={{ color: "#475569" }}>
+                Already have an account?{" "}
+                <button onClick={() => setShowAuthModal(true)}
+                  className="underline transition-colors" style={{ color: "#06b6d4" }}>
+                  Sign in
                 </button>
-              </div>
-            ))}
+              </p>
+            </div>
           </div>
         </div>
       </section>
