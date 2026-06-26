@@ -150,3 +150,66 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================================
+   DIGIHEALTH CUSTOM ANIMATIONS (ECG & JARVIS ORB)
+   ============================================================ */
+
+@keyframes ecg-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.ecg-sweep-animation {
+  animation: ecg-sweep 2s linear infinite;
+}
+
+@keyframes jarvis-spin-cw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jarvis-spin-ccw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes jarvis-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 30px rgba(6, 182, 212, 0.8), inset 0 0 20px rgba(6, 182, 212, 0.6);
+  }
+}
+
+.jarvis-outer-ring {
+  animation: jarvis-spin-cw 8s linear infinite;
+}
+
+.jarvis-middle-ring {
+  animation: jarvis-spin-ccw 6s linear infinite;
+}
+
+.jarvis-inner-orb {
+  animation: jarvis-pulse 2s ease-in-out infinite;
+}
+
+.jarvis-inner-orb-active {
+  animation: jarvis-pulse 0.8s ease-in-out infinite;
+}
+

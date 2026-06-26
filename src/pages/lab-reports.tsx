@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { useApp } from "@/contexts/app-context"
 import { useSupabaseData } from "@/hooks/use-supabase-data"
+import { ECGLoader } from "@/components/ui/ecg-loader"
 import { formatDate } from "@/lib/utils"
 import type { LabReport } from "@/lib/supabase"
 
@@ -93,7 +93,7 @@ export function LabReports() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+        <ECGLoader message="Retrieving diagnostic lab reports..." />
       ) : reports.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center">
           <FlaskConical className="size-12 text-muted-foreground/50" />
